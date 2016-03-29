@@ -12,19 +12,19 @@ func TestScanner(t *testing.T) {
 	scanner := NewScanner(reader)
 
 	expected := []Token{
-		Token{Type: Identifier, Val: "x"},
-		Token{Type: Equals, Val: "="},
-		Token{Type: Identifier, Val: "foo"},
-		Token{Type: OpenParen, Val: "("},
-		Token{Type: String, Val: "bar"},
-		Token{Type: CloseParen, Val: ")"},
+		Token{Line: 0, Offset: 0, Type: Identifier, Val: "x"},
+		Token{Line: 0, Offset: 1, Type: Equals, Val: "="},
+		Token{Line: 0, Offset: 2, Type: Identifier, Val: "foo"},
+		Token{Line: 0, Offset: 5, Type: OpenParen, Val: "("},
+		Token{Line: 0, Offset: 6, Type: String, Val: "bar"},
+		Token{Line: 0, Offset: 11, Type: CloseParen, Val: ")"},
 	}
 
 	for _, exp := range expected {
 		if next, err := scanner.Next(); err != nil {
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(&exp, next) {
-			t.Fatal(next.Type)
+			t.Fatal(next)
 		}
 	}
 }

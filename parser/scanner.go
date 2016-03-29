@@ -16,6 +16,8 @@ type Scanner struct {
 	current rune
 	hold    bool
 	err     error
+	line    int
+	offset  int
 }
 
 // NewScanner returns a new scanner over the reader r.
@@ -23,6 +25,7 @@ func NewScanner(r io.Reader) *Scanner {
 	return &Scanner{
 		reader: bufio.NewReader(r),
 		buf:    make([]rune, 0, 1024),
+		offset: -1,
 	}
 }
 
@@ -62,6 +65,7 @@ func (s *Scanner) Next() (*Token, error) {
 }
 
 func (s *Scanner) readIdentifier() *Token {
+	line, offset := s.line, s.offset
 	s.appendCurrent()
 
 	for {
@@ -77,12 +81,15 @@ func (s *Scanner) readIdentifier() *Token {
 	}
 
 	return &Token{
-		Type: Identifier,
-		Val:  string(s.buf),
+		Line:   line,
+		Offset: offset,
+		Type:   Identifier,
+		Val:    string(s.buf),
 	}
 }
 
 func (s *Scanner) readString() (*Token, error) {
+	line, offset := s.line, s.offset
 	s.discardCurrent()
 
 	for {
@@ -110,16 +117,21 @@ func (s *Scanner) readString() (*Token, error) {
 	}
 
 	return &Token{
-		Type: String,
-		Val:  string(s.buf),
+		Line:   line,
+		Offset: offset,
+		Type:   String,
+		Val:    string(s.buf),
 	}, nil
 }
 
 func (s *Scanner) readSingle(typ TokenType) *Token {
+	line, offset := s.line, s.offset
 	s.appendCurrent()
 	return &Token{
-		Type: typ,
-		Val:  string(s.buf),
+		Line:   line,
+		Offset: offset,
+		Type:   typ,
+		Val:    string(s.buf),
 	}
 }
 
@@ -130,6 +142,14 @@ func (s *Scanner) read() error {
 
 	s.current, _, s.err = s.reader.ReadRune()
 	s.hold = true
+
+	if s.current == '\n' {
+		s.offset = 0
+		s.line++
+	} else {
+		s.offset++
+	}
+
 	return s.err
 }
 

@@ -1,5 +1,9 @@
 package parser
 
+import (
+	"fmt"
+)
+
 const (
 	Identifier TokenType = iota
 	String
@@ -31,4 +35,8 @@ type Token struct {
 	Line, Offset int
 	Type         TokenType
 	Val          interface{}
+}
+
+func (t Token) String() string {
+	return fmt.Sprintf("%s(%v)@[%d,%d]", t.Type.String(), t.Val, t.Line, t.Offset)
 }
