@@ -14,6 +14,7 @@ type Scanner struct {
 	reader  *bufio.Reader
 	buf     []rune
 	current rune
+	hold    bool
 	err     error
 }
 
@@ -37,6 +38,7 @@ func (s *Scanner) Next() (*Token, error) {
 
 	// Skip the spaces.
 	for isSpace(s.current) {
+		s.discardCurrent()
 		if err := s.read(); err != nil {
 			return nil, err
 		}
@@ -81,16 +83,20 @@ func (s *Scanner) readIdentifier() *Token {
 }
 
 func (s *Scanner) readString() (*Token, error) {
+	s.discardCurrent()
+
 	for {
 		if err := s.read(); err != nil {
 			return nil, err
 		}
 
 		if s.current == '"' {
+			s.discardCurrent()
 			break
 		}
 
 		if s.current == '\\' {
+			s.discardCurrent()
 			if err := s.read(); err != nil {
 				return nil, err
 			}
@@ -118,16 +124,22 @@ func (s *Scanner) readSingle(typ TokenType) *Token {
 }
 
 func (s *Scanner) read() error {
-	if s.err != nil {
+	if s.err != nil || s.hold {
 		return s.err
 	}
 
 	s.current, _, s.err = s.reader.ReadRune()
+	s.hold = true
 	return s.err
 }
 
 func (s *Scanner) appendCurrent() {
 	s.buf = append(s.buf, s.current)
+	s.hold = false
+}
+
+func (s *Scanner) discardCurrent() {
+	s.hold = false
 }
 
 func (s *Scanner) clear() {

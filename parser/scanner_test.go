@@ -2,12 +2,35 @@ package parser
 
 import (
 	"io"
+	"reflect"
 	"strings"
 	"testing"
 )
 
+func TestScanner(t *testing.T) {
+	reader := strings.NewReader(`x=foo("bar")`)
+	scanner := NewScanner(reader)
+
+	expected := []Token{
+		Token{Type: Identifier, Val: "x"},
+		Token{Type: Equals, Val: "="},
+		Token{Type: Identifier, Val: "foo"},
+		Token{Type: OpenParen, Val: "("},
+		Token{Type: String, Val: "bar"},
+		Token{Type: CloseParen, Val: ")"},
+	}
+
+	for _, exp := range expected {
+		if next, err := scanner.Next(); err != nil {
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(&exp, next) {
+			t.Fatal(next.Type)
+		}
+	}
+}
+
 func TestScannerIdentifier(t *testing.T) {
-	reader := strings.NewReader(" foo bar ")
+	reader := strings.NewReader(` foo bar `)
 	scanner := NewScanner(reader)
 
 	if next, err := scanner.Next(); err != nil {
@@ -49,7 +72,7 @@ func TestScannerString(t *testing.T) {
 }
 
 func TestScannerPunctuation(t *testing.T) {
-	reader := strings.NewReader(" ()= ")
+	reader := strings.NewReader(` ()= `)
 	scanner := NewScanner(reader)
 
 	expected := []TokenType{OpenParen, CloseParen, Equals}
