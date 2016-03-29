@@ -46,6 +46,14 @@ func (s *Scanner) Next() (*Token, error) {
 	switch {
 	case isAlpha(s.current):
 		return s.readIdentifier(), nil
+	case s.current == '"':
+		return s.readString()
+	case s.current == '(':
+		return s.readSingle(OpenParen), nil
+	case s.current == ')':
+		return s.readSingle(CloseParen), nil
+	case s.current == '=':
+		return s.readSingle(Equals), nil
 	default:
 		return nil, ErrUnexpectedInput
 	}
@@ -68,6 +76,43 @@ func (s *Scanner) readIdentifier() *Token {
 
 	return &Token{
 		Type: Identifier,
+		Val:  string(s.buf),
+	}
+}
+
+func (s *Scanner) readString() (*Token, error) {
+	for {
+		if err := s.read(); err != nil {
+			return nil, err
+		}
+
+		if s.current == '"' {
+			break
+		}
+
+		if s.current == '\\' {
+			if err := s.read(); err != nil {
+				return nil, err
+			}
+
+			if s.current != '\\' && s.current != '"' {
+				return nil, ErrUnexpectedInput
+			}
+		}
+
+		s.appendCurrent()
+	}
+
+	return &Token{
+		Type: String,
+		Val:  string(s.buf),
+	}, nil
+}
+
+func (s *Scanner) readSingle(typ TokenType) *Token {
+	s.appendCurrent()
+	return &Token{
+		Type: typ,
 		Val:  string(s.buf),
 	}
 }
