@@ -6,14 +6,18 @@ import (
 	"io"
 )
 
+// ErrUnexpectedInput represents any kind of unexpected input in the reader.
 var ErrUnexpectedInput = errors.New("unexpected input")
 
+// Scanner reads tokens from an io.Reader.
 type Scanner struct {
 	reader  *bufio.Reader
 	buf     []rune
 	current rune
+	err     error
 }
 
+// NewScanner returns a new scanner over the reader r.
 func NewScanner(r io.Reader) *Scanner {
 	return &Scanner{
 		reader: bufio.NewReader(r),
@@ -21,22 +25,24 @@ func NewScanner(r io.Reader) *Scanner {
 	}
 }
 
+// Next returns the next token from the reader, if any.  Returns EOF when there
+// are no more to read.
 func (s *Scanner) Next() (*Token, error) {
-	s.buf = s.buf[:0]
+	// Clear the buffer.
+	s.clear()
 
-	var err error
-	s.current, _, err = s.reader.ReadRune()
-	if err != nil {
+	if err := s.read(); err != nil {
 		return nil, err
 	}
 
+	// Skip the spaces.
 	for isSpace(s.current) {
-		s.current, _, err = s.reader.ReadRune()
-		if err != nil {
+		if err := s.read(); err != nil {
 			return nil, err
 		}
 	}
 
+	// Figure out how to parse the next token.
 	switch {
 	case isAlpha(s.current):
 		return s.readIdentifier(), nil
@@ -46,12 +52,10 @@ func (s *Scanner) Next() (*Token, error) {
 }
 
 func (s *Scanner) readIdentifier() *Token {
-	s.buf = append(s.buf, s.current)
+	s.appendCurrent()
 
-	var err error
 	for {
-		s.current, _, err = s.reader.ReadRune()
-		if err != nil {
+		if err := s.read(); err != nil {
 			break
 		}
 
@@ -59,13 +63,30 @@ func (s *Scanner) readIdentifier() *Token {
 			break
 		}
 
-		s.buf = append(s.buf, s.current)
+		s.appendCurrent()
 	}
 
 	return &Token{
 		Type: Identifier,
 		Val:  string(s.buf),
 	}
+}
+
+func (s *Scanner) read() error {
+	if s.err != nil {
+		return s.err
+	}
+
+	s.current, _, s.err = s.reader.ReadRune()
+	return s.err
+}
+
+func (s *Scanner) appendCurrent() {
+	s.buf = append(s.buf, s.current)
+}
+
+func (s *Scanner) clear() {
+	s.buf = s.buf[:0]
 }
 
 func isAlpha(r rune) bool {
