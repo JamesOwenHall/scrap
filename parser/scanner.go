@@ -57,6 +57,10 @@ func (s *Scanner) Next() (*Token, error) {
 		return s.readSingle(OpenParen), nil
 	case s.current == ')':
 		return s.readSingle(CloseParen), nil
+	case s.current == ',':
+		return s.readSingle(Comma), nil
+	case s.current == '.':
+		return s.readSingle(Period), nil
 	case s.current == '=':
 		return s.readSingle(Equals), nil
 	default:

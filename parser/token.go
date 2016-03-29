@@ -9,6 +9,8 @@ const (
 	String
 	OpenParen
 	CloseParen
+	Comma
+	Period
 	Equals
 )
 
@@ -24,6 +26,10 @@ func (t TokenType) String() string {
 		return "open-paren"
 	case CloseParen:
 		return "close-paren"
+	case Comma:
+		return "comma"
+	case Period:
+		return "period"
 	case Equals:
 		return "equals"
 	default:
