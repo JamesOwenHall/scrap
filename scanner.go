@@ -50,7 +50,7 @@ func (s *Scanner) Next() (*Token, error) {
 	// Figure out how to parse the next token.
 	switch {
 	case isAlpha(s.current):
-		return s.readIdentifier(), nil
+		return s.readIdent(), nil
 	case s.current == '"':
 		return s.readString()
 	case s.current == '(':
@@ -68,7 +68,7 @@ func (s *Scanner) Next() (*Token, error) {
 	}
 }
 
-func (s *Scanner) readIdentifier() *Token {
+func (s *Scanner) readIdent() *Token {
 	line, offset := s.line, s.offset
 	s.appendCurrent()
 
@@ -87,7 +87,7 @@ func (s *Scanner) readIdentifier() *Token {
 	return &Token{
 		Line:   line,
 		Offset: offset,
-		Type:   Identifier,
+		Type:   Ident,
 		Val:    string(s.buf),
 	}
 }

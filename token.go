@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	Identifier TokenType = iota
+	Ident TokenType = iota
 	String
 	OpenParen
 	CloseParen
@@ -18,7 +18,7 @@ type TokenType int
 
 func (t TokenType) String() string {
 	switch t {
-	case Identifier:
+	case Ident:
 		return "identifier"
 	case String:
 		return "string"

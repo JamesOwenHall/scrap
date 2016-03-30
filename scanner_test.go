@@ -12,9 +12,9 @@ func TestScanner(t *testing.T) {
 	scanner := NewScanner(reader)
 
 	expected := []Token{
-		Token{Line: 0, Offset: 0, Type: Identifier, Val: "x"},
+		Token{Line: 0, Offset: 0, Type: Ident, Val: "x"},
 		Token{Line: 0, Offset: 1, Type: Equals, Val: "="},
-		Token{Line: 0, Offset: 2, Type: Identifier, Val: "foo"},
+		Token{Line: 0, Offset: 2, Type: Ident, Val: "foo"},
 		Token{Line: 0, Offset: 5, Type: OpenParen, Val: "("},
 		Token{Line: 0, Offset: 6, Type: String, Val: "bar"},
 		Token{Line: 0, Offset: 11, Type: Comma, Val: ","},
@@ -31,13 +31,13 @@ func TestScanner(t *testing.T) {
 	}
 }
 
-func TestScannerIdentifier(t *testing.T) {
+func TestScannerIdent(t *testing.T) {
 	reader := strings.NewReader(` foo bar `)
 	scanner := NewScanner(reader)
 
 	if next, err := scanner.Next(); err != nil {
 		t.Fatal(err)
-	} else if next.Type != Identifier {
+	} else if next.Type != Ident {
 		t.Fatal(next.Type)
 	} else if next.Val != "foo" {
 		t.Fatal(next.Val)
@@ -45,7 +45,7 @@ func TestScannerIdentifier(t *testing.T) {
 
 	if next, err := scanner.Next(); err != nil {
 		t.Fatal(err)
-	} else if next.Type != Identifier {
+	} else if next.Type != Ident {
 		t.Fatal(next.Type)
 	} else if next.Val != "bar" {
 		t.Fatal(next.Val)
