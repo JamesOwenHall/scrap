@@ -25,7 +25,7 @@ func TestParserAssignment(t *testing.T) {
 
 	if assign, ok := expr.(*Assignment); !ok {
 		t.Fatalf("%T", expr)
-	} else if assign.Left != "foo" {
+	} else if assign.Left.Name != "foo" {
 		t.Fatal(assign.Left)
 	} else if str, ok := assign.Right.(*StringLiteral); !ok {
 		t.Fatalf("%T", assign.Right)

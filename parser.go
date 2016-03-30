@@ -8,6 +8,9 @@ import (
 
 type Parser struct {
 	scanner *Scanner
+	current *Token
+	hold    bool
+	err     error
 }
 
 func Parse(reader io.Reader) (Expression, error) {
@@ -46,43 +49,53 @@ func (e *ParseError) Error() string {
 }
 
 func (p *Parser) ParseExpression() (Expression, error) {
-	next, err := p.scanner.Next()
-	if err != nil {
+	if err := p.read(); err != nil {
 		return nil, err
 	}
 
-	switch next.Type {
+	switch p.current.Type {
 	case String:
-		lit := StringLiteral(next.Val.(string))
+		lit := StringLiteral(p.current.Val.(string))
+		p.discard()
 		return &lit, nil
-	}
-
-	if next.Type != Ident {
-		return nil, &ParseError{
-			Expected: []TokenType{Ident},
-			Actual:   next,
+	case Ident:
+		left := &Identifier{
+			Line:   p.current.Line,
+			Offset: p.current.Offset,
+			Name:   p.current.Val.(string),
 		}
-	}
-	ident := next.Val.(string)
+		p.discard()
 
-	next, err = p.scanner.Next()
-	if err != nil {
-		return nil, err
-	}
-	if next.Type != Equals {
-		return nil, &ParseError{
-			Expected: []TokenType{Equals},
-			Actual:   next,
+		if err := p.read(); err != nil || p.current.Type != Equals {
+			return left, nil
 		}
+		p.discard()
+
+		right, err := p.ParseExpression()
+		if err != nil {
+			return nil, err
+		}
+		p.discard()
+
+		return &Assignment{
+			Left:  left,
+			Right: right,
+		}, nil
+	default:
+		return nil, &ParseError{Actual: p.current}
+	}
+}
+
+func (p *Parser) read() error {
+	if p.err != nil || p.hold {
+		return p.err
 	}
 
-	right, err := p.ParseExpression()
-	if err != nil {
-		return nil, err
-	}
+	p.current, p.err = p.scanner.Next()
+	p.hold = true
+	return p.err
+}
 
-	return &Assignment{
-		Left:  ident,
-		Right: right,
-	}, nil
+func (p *Parser) discard() {
+	p.hold = false
 }

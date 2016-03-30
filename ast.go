@@ -17,11 +17,14 @@ type Expression interface {
 	Eval(p *Program) (interface{}, error)
 }
 
-type Identifier Token
+type Identifier struct {
+	Line, Offset int
+	Name         string
+}
 
 func (i *Identifier) Eval(p *Program) (interface{}, error) {
-	if val, exists := p.Vars[i.Val.(string)]; !exists {
-		return nil, &UnknownVariable{Line: i.Line, Offset: i.Offset, Name: i.Val.(string)}
+	if val, exists := p.Vars[i.Name]; !exists {
+		return nil, &UnknownVariable{Line: i.Line, Offset: i.Offset, Name: i.Name}
 	} else {
 		return val, nil
 	}
@@ -34,7 +37,7 @@ func (s *StringLiteral) Eval(_ *Program) (interface{}, error) {
 }
 
 type Assignment struct {
-	Left  string
+	Left  *Identifier
 	Right Expression
 }
 
@@ -44,6 +47,6 @@ func (a *Assignment) Eval(p *Program) (interface{}, error) {
 		return nil, err
 	}
 
-	p.Vars[a.Left] = result
+	p.Vars[a.Left.Name] = result
 	return result, nil
 }
