@@ -34,9 +34,18 @@ func (e *ParseError) Error() string {
 
 	switch len(e.Expected) {
 	case 0:
-		return fmt.Sprintf("(%d,%d) unexpected %s", e.Actual.Line, e.Actual.Offset, e.Actual.Type)
+		return fmt.Sprintf("(%d,%d) unexpected %s",
+			e.Actual.Line,
+			e.Actual.Offset,
+			e.Actual.Type,
+		)
 	case 1:
-		return fmt.Sprintf("(%d,%d) unexpected %s; expected %s", e.Actual.Line, e.Actual.Offset, e.Actual.Type, e.Expected[0])
+		return fmt.Sprintf("(%d,%d) unexpected %s; expected %s",
+			e.Actual.Line,
+			e.Actual.Offset,
+			e.Actual.Type,
+			e.Expected[0],
+		)
 	default:
 		expected := make([]string, 0, len(e.Expected))
 		for _, e := range e.Expected {
@@ -44,7 +53,13 @@ func (e *ParseError) Error() string {
 		}
 
 		commaSeparated := strings.Join(expected[:len(expected)-1], ", ")
-		return fmt.Sprintf("(%d,%d) unexpected %s; expected %s or %s", e.Actual.Line, e.Actual.Offset, e.Actual.Type, commaSeparated, expected[len(expected)-1])
+		return fmt.Sprintf("(%d,%d) unexpected %s; expected %s or %s",
+			e.Actual.Line,
+			e.Actual.Offset,
+			e.Actual.Type,
+			commaSeparated,
+			expected[len(expected)-1],
+		)
 	}
 }
 
@@ -66,21 +81,65 @@ func (p *Parser) ParseExpression() (Expression, error) {
 		}
 		p.discard()
 
-		if err := p.read(); err != nil || p.current.Type != Equals {
+		if err := p.read(); err != nil {
 			return left, nil
 		}
-		p.discard()
 
-		right, err := p.ParseExpression()
-		if err != nil {
-			return nil, err
+		switch p.current.Type {
+		case Equals:
+			p.discard()
+			right, err := p.ParseExpression()
+			if err != nil {
+				return nil, err
+			}
+			p.discard()
+
+			return &Assignment{
+				Left:  left,
+				Right: right,
+			}, nil
+		case OpenParen:
+			p.discard()
+
+			args := []Expression{}
+			firstArg, err := p.ParseExpression()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, firstArg)
+
+			for {
+				if err := p.read(); err != nil {
+					return nil, err
+				}
+
+				switch p.current.Type {
+				case CloseParen:
+					p.discard()
+					return &FunctionCall{
+						Line:      left.Line,
+						Offset:    left.Offset,
+						Name:      left.Name,
+						Arguments: args,
+					}, nil
+				case Comma:
+					p.discard()
+					arg, err := p.ParseExpression()
+					if err != nil {
+						return nil, err
+					}
+					args = append(args, arg)
+				default:
+					return nil, &ParseError{
+						Expected: []TokenType{Comma, CloseParen},
+						Actual:   p.current,
+					}
+				}
+			}
+
+		default:
+			return left, nil
 		}
-		p.discard()
-
-		return &Assignment{
-			Left:  left,
-			Right: right,
-		}, nil
 	default:
 		return nil, &ParseError{Actual: p.current}
 	}

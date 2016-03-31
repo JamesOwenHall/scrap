@@ -50,3 +50,13 @@ func (a *Assignment) Eval(p *Program) (interface{}, error) {
 	p.Vars[a.Left.Name] = result
 	return result, nil
 }
+
+type FunctionCall struct {
+	Line, Offset int
+	Name         string
+	Arguments    []Expression
+}
+
+func (f *FunctionCall) Eval(p *Program) (interface{}, error) {
+	panic("TODO")
+}

@@ -33,3 +33,22 @@ func TestParserAssignment(t *testing.T) {
 		t.Fatal(*str)
 	}
 }
+
+func TestParserFunctionCall(t *testing.T) {
+	expr, err := ParseString(`foo(bar, "baz")`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if fc, ok := expr.(*FunctionCall); !ok {
+		t.Fatalf("%T", expr)
+	} else if fc.Name != "foo" {
+		t.Fatal(fc.Name)
+	} else if len(fc.Arguments) != 2 {
+		t.Fatal(fc.Arguments)
+	} else if ident, ok := fc.Arguments[0].(*Identifier); !ok || ident.Name != "bar" {
+		t.Fatal(fc.Arguments[0])
+	} else if str, ok := fc.Arguments[1].(*StringLiteral); !ok || *str != "baz" {
+		t.Fatal(*str)
+	}
+}
