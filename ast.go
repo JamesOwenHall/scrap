@@ -10,7 +10,7 @@ type UnknownVariable struct {
 }
 
 func (u *UnknownVariable) Error() string {
-	return fmt.Sprintf("(%d,%d) unknown variable \"%d\"", u.Line, u.Offset, u.Name)
+	return fmt.Sprintf("(%d,%d) unknown variable \"%s\"", u.Line, u.Offset, u.Name)
 }
 
 type UnknownFunction struct {

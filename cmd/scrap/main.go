@@ -50,7 +50,7 @@ func main() {
 	for _, expr := range expressions {
 		_, err := expr.Eval(program)
 		if err != nil {
-			Errorf("error: %s", err.Error())
+			Errorf("%s", err.Error())
 			os.Exit(1)
 		}
 	}
