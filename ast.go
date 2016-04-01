@@ -13,6 +13,15 @@ func (u *UnknownVariable) Error() string {
 	return fmt.Sprintf("(%d,%d) unknown variable \"%d\"", u.Line, u.Offset, u.Name)
 }
 
+type UnknownFunction struct {
+	Line, Offset int
+	Name         string
+}
+
+func (u *UnknownFunction) Error() string {
+	return fmt.Sprintf("(%d,%d) unknown function \"%s\"", u.Line, u.Offset, u.Name)
+}
+
 type Expression interface {
 	Eval(p *Program) (interface{}, error)
 }
@@ -58,5 +67,18 @@ type FunctionCall struct {
 }
 
 func (f *FunctionCall) Eval(p *Program) (interface{}, error) {
-	panic("TODO")
+	if fn, exists := p.Funcs[f.Name]; !exists {
+		return nil, &UnknownFunction{Line: f.Line, Offset: f.Offset, Name: f.Name}
+	} else {
+		values := make([]interface{}, 0, len(f.Arguments))
+		for _, arg := range f.Arguments {
+			if val, err := arg.Eval(p); err != nil {
+				return nil, err
+			} else {
+				values = append(values, val)
+			}
+		}
+
+		return fn(values)
+	}
 }
