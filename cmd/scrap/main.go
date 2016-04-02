@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/JamesOwenHall/scrap"
@@ -19,39 +18,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	files := make([]io.Reader, 0, flag.NArg())
-
-	// Parse all of the input files.
-	for i := 0; i < flag.NArg(); i++ {
-		file, err := os.Open(flag.Arg(i))
-		if err != nil {
-			Errorf("error: can't open file %s", flag.Arg(i))
-			os.Exit(1)
-		}
-		defer file.Close()
-
-		files = append(files, file)
-	}
-
-	expressions := []scrap.Expression{}
-	parser := scrap.NewParser(io.MultiReader(files...))
-	for {
-		expr, err := parser.ParseExpression()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			Errorf("error: %s", err.Error())
-			os.Exit(1)
-		}
-
-		expressions = append(expressions, expr)
-	}
-
-	// Run all of the expressions.
 	program := scrap.NewProgram()
-	for _, expr := range expressions {
-		_, err := expr.Eval(program)
-		if err != nil {
+	for _, arg := range flag.Args() {
+		if err := program.RunFile(arg); err != nil {
 			Errorf("%s", err.Error())
 			os.Exit(1)
 		}
