@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/JamesOwenHall/scrap"
@@ -14,8 +16,8 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		Errorf("error: missing input file")
-		os.Exit(1)
+		Repl()
+		return
 	}
 
 	program := scrap.NewProgram()
@@ -24,6 +26,39 @@ func main() {
 			Errorf("%s", err.Error())
 			os.Exit(1)
 		}
+	}
+}
+
+func Repl() {
+	scanner := bufio.NewScanner(os.Stdin)
+	program := scrap.NewProgram()
+
+	for {
+		fmt.Print("=> ")
+		if !scanner.Scan() {
+			break
+		}
+
+		expr, err := scrap.ParseString(scanner.Text())
+		if err == io.EOF {
+			continue
+		} else if err != nil {
+			Errorf("%s", err.Error())
+			continue
+		}
+
+		val, err := expr.Eval(program)
+		if err != nil {
+			Errorf("%s", err.Error())
+			continue
+		}
+
+		fmt.Println(val)
+	}
+
+	if err := scanner.Err(); err != nil {
+		Errorf("%s", err.Error())
+		os.Exit(1)
 	}
 }
 
