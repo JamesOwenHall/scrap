@@ -105,6 +105,18 @@ func (p *Parser) ParseExpression() (Expression, error) {
 		case OpenParen:
 			p.discard()
 
+			if err := p.read(); err != nil {
+				return nil, err
+			}
+			if p.current.Type == CloseParen {
+				return &FunctionCall{
+					Line:      left.Line,
+					Offset:    left.Offset,
+					Name:      left.Name,
+					Arguments: []Expression{},
+				}, nil
+			}
+
 			args := []Expression{}
 			firstArg, err := p.ParseExpression()
 			if err != nil {

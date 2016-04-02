@@ -54,6 +54,7 @@ func (p *Program) RunFile(filename string) error {
 }
 
 func print(args []interface{}) (interface{}, error) {
-	fmt.Println(args...)
-	return nil, nil
+	str := fmt.Sprint(args...)
+	fmt.Println(str)
+	return str, nil
 }
