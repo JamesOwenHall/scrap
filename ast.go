@@ -2,6 +2,7 @@ package scrap
 
 import (
 	"fmt"
+	"strings"
 )
 
 type UnknownVariable struct {
@@ -24,6 +25,7 @@ func (u *UnknownFunction) Error() string {
 
 type Expression interface {
 	Eval(p *Program) (interface{}, error)
+	String() string
 }
 
 type Identifier struct {
@@ -39,10 +41,18 @@ func (i *Identifier) Eval(p *Program) (interface{}, error) {
 	}
 }
 
+func (i *Identifier) String() string {
+	return i.Name
+}
+
 type StringLiteral string
 
 func (s *StringLiteral) Eval(_ *Program) (interface{}, error) {
 	return string(*s), nil
+}
+
+func (s *StringLiteral) String() string {
+	return `"` + string(*s) + `"`
 }
 
 type Assignment struct {
@@ -58,6 +68,10 @@ func (a *Assignment) Eval(p *Program) (interface{}, error) {
 
 	p.Vars[a.Left.Name] = result
 	return result, nil
+}
+
+func (a *Assignment) String() string {
+	return fmt.Sprintf("%s = %s", a.Left.String(), a.Right.String())
 }
 
 type FunctionCall struct {
@@ -81,4 +95,13 @@ func (f *FunctionCall) Eval(p *Program) (interface{}, error) {
 
 		return fn(values)
 	}
+}
+
+func (f *FunctionCall) String() string {
+	args := make([]string, 0, len(f.Arguments))
+	for _, arg := range f.Arguments {
+		args = append(args, arg.String())
+	}
+
+	return fmt.Sprintf("%s(%s)", strings.Join(args, ", "))
 }

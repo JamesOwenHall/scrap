@@ -19,8 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	program := scrap.NewProgram()
-	expressions := []scrap.Expression{}
+	files := make([]io.Reader, 0, flag.NArg())
 
 	// Parse all of the input files.
 	for i := 0; i < flag.NArg(); i++ {
@@ -29,24 +28,27 @@ func main() {
 			Errorf("error: can't open file %s", flag.Arg(i))
 			os.Exit(1)
 		}
+		defer file.Close()
 
-		for {
-			expr, err := scrap.Parse(file)
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				Errorf("error: %s", err.Error())
-				file.Close()
-				os.Exit(1)
-			}
+		files = append(files, file)
+	}
 
-			expressions = append(expressions, expr)
+	expressions := []scrap.Expression{}
+	parser := scrap.NewParser(io.MultiReader(files...))
+	for {
+		expr, err := parser.ParseExpression()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			Errorf("error: %s", err.Error())
+			os.Exit(1)
 		}
 
-		file.Close()
+		expressions = append(expressions, expr)
 	}
 
 	// Run all of the expressions.
+	program := scrap.NewProgram()
 	for _, expr := range expressions {
 		_, err := expr.Eval(program)
 		if err != nil {

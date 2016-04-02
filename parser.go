@@ -13,6 +13,10 @@ type Parser struct {
 	err     error
 }
 
+func NewParser(reader io.Reader) *Parser {
+	return &Parser{scanner: NewScanner(reader)}
+}
+
 func Parse(reader io.Reader) (Expression, error) {
 	p := Parser{scanner: NewScanner(reader)}
 	return p.ParseExpression()
